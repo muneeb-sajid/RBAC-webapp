@@ -111,9 +111,6 @@ export default function AssignPermission() {
         <Card>
           <div className="p-8 text-center text-slate-500 dark:text-slate-400">
             <p>No roles found. Please create a role first.</p>
-            <Button className="mt-4" onClick={() => window.location.href = '/roles/create'}>
-              Create Role
-            </Button>
           </div>
         </Card>
       </div>

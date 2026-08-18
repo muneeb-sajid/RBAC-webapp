@@ -19,7 +19,6 @@ import RoleCreate from '../pages/roles/RoleCreate.jsx'
 import RoleDetails from '../pages/roles/RoleDetails.jsx'
 
 import Permissions from '../pages/permissions/Permissions.jsx'
-import PermissionCreate from '../pages/permissions/PermissionCreate.jsx'
 import AssignPermission from '../pages/permissions/AssignPermission.jsx'
 import RevokePermission from '../pages/permissions/RevokePermission.jsx'
 
@@ -122,14 +121,7 @@ export default function AppRoutes() {
               </PermissionGuard>
             }
           />
-          <Route
-            path="/permissions/create"
-            element={
-              <PermissionGuard permission="permissions.create">
-                <PermissionCreate />
-              </PermissionGuard>
-            }
-          />
+          
           <Route
             path="/permissions/assign"
             element={

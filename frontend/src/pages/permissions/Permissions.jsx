@@ -104,13 +104,7 @@ export default function Permissions() {
       <PageHeader
         title="Permissions"
         description="Browse, search, and manage the full permission catalog."
-        actions={
-          <Can permission="permissions.create">
-            <Button icon={Plus} onClick={() => navigate('/permissions/create')}>
-              Create permission
-            </Button>
-          </Can>
-        }
+        
       />
 
       <Card padded={false}>
