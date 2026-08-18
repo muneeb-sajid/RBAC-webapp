@@ -56,9 +56,9 @@ export default function Login() {
           <span className="text-lg font-bold tracking-tight">Sentinel</span>
         </div>
         <div className="relative">
-          <h2 className="max-w-md text-3xl font-bold leading-tight tracking-tight">Access control that scales with your team.</h2>
+          <h2 className="max-w-md text-3xl font-bold leading-tight tracking-tight">Control Access. Protect What Matters.</h2>
           <p className="mt-4 max-w-sm text-sm text-slate-400">
-            Manage users, roles, and permissions from a single console built for enterprise-grade RBAC.
+            Secure your enterprise with centralized role-based access, controlled permissions, and reliable user management.
           </p>
           <div className="mt-8 flex items-center gap-6 text-sm text-slate-400">
             <div>
@@ -88,11 +88,7 @@ export default function Login() {
           <h1 className="text-2xl font-bold tracking-tight text-ink-900">Sign in to your account</h1>
           <p className="mt-1.5 text-sm text-slate-500">Enter your credentials to access the admin panel.</p>
 
-          <div className="mt-5 rounded-xl border border-surface-border bg-surface-muted/60 px-4 py-3 text-xs text-slate-600">
-            <p className="font-semibold text-ink-900">Demo credentials</p>
-            <p className="mt-1 font-mono">admin@example.com / Admin123!</p>
-          </div>
-
+         ``
           {apiError && (
             <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-danger-200 bg-danger-50 px-3.5 py-3 text-sm text-danger-700">
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
