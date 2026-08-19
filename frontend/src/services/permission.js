@@ -70,26 +70,6 @@ export async function getPermissions({ search = '', module = 'all', type = 'all'
   }
 }
 
-export async function createPermission(payload) {
-  if (USE_MOCKS) {
-    await delay(500)
-    const newPermission = {
-      id: `p${Date.now()}`,
-      name: payload.name,
-      displayName: payload.displayName,
-      module: payload.module,
-      description: payload.description,
-      status: payload.status || 'active',
-      createdAt: new Date().toISOString().slice(0, 10),
-    }
-    permissionsStore = [newPermission, ...permissionsStore]
-    return clone(newPermission)
-  }
-  
-  const { data } = await api.post('/permissions', payload)
-  return data.permission || data
-}
-
 // src/services/permission.js - Updated assignPermissions
 
 export async function assignPermissions({ roleId, permissionNames }) {

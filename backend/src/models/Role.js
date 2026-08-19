@@ -27,6 +27,18 @@ const roleSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    // System roles (Admin, Manager, ...) ship with the app and are
+    // protected from deletion/renaming. Custom roles created by
+    // administrators have isSystemRole: false.
+    isSystemRole: {
+      type: Boolean,
+      default: false,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
   },
   { timestamps: true }
 )

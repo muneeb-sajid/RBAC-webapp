@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Check } from 'lucide-react'
 import PageHeader from '../../components/common/PageHeader.jsx'
 import Card, { CardHeader } from '../../components/common/Card.jsx'
@@ -8,32 +8,44 @@ import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx'
 import EmptyState from '../../components/common/EmptyState.jsx'
 import { useToast } from '../../context/ToastContext.jsx'
-import { getRolesForAssignment, revokePermissions } from '../../services/permission'
-import { permissions as allPermissions, MODULES } from '../../data/mockData'
+import { getRolesForAssignment, revokePermissions, getPermissions } from '../../services/permission'
 
 export default function RevokePermission() {
   const toast = useToast()
   const [roles, setRoles] = useState([])
+  const [allPermissions, setAllPermissions] = useState([]) // full predefined catalog from the API
   const [loadingRoles, setLoadingRoles] = useState(true)
   const [roleId, setRoleId] = useState('')
   const [toRevoke, setToRevoke] = useState([])
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  const load = useCallback(async () => {
+    setLoadingRoles(true)
+    try {
+      const [rolesRes, permsRes] = await Promise.all([getRolesForAssignment(), getPermissions()])
+      setRoles(rolesRes)
+      setAllPermissions(permsRes.items || [])
+      setRoleId((prev) => prev || rolesRes[0]?.id || '')
+    } catch {
+      toast.error('Failed to load roles or permissions')
+    } finally {
+      setLoadingRoles(false)
+    }
+  }, [toast])
+
   useEffect(() => {
-    getRolesForAssignment()
-      .then((res) => {
-        setRoles(res)
-        if (res[0]) setRoleId(res[0].id)
-      })
-      .finally(() => setLoadingRoles(false))
-  }, [])
+    load()
+  }, [load])
 
   const currentRole = roles.find((r) => r.id === roleId)
+  // Always driven by the live, predefined permission catalog (including
+  // Security/Sessions/Activity permissions) — never the stale mock list.
   const assignedPermissions = allPermissions.filter((p) => currentRole?.permissions.includes(p.name))
-  const grouped = MODULES.map((module) => ({ module, items: assignedPermissions.filter((p) => p.module === module) })).filter(
-    (g) => g.items.length > 0
-  )
+  const moduleOrder = Array.from(new Set(allPermissions.map((p) => p.module)))
+  const grouped = moduleOrder
+    .map((module) => ({ module, items: assignedPermissions.filter((p) => p.module === module) }))
+    .filter((g) => g.items.length > 0)
 
   function handleRoleChange(id) {
     setRoleId(id)
@@ -104,7 +116,7 @@ export default function RevokePermission() {
                     const marked = toRevoke.includes(p.name)
                     return (
                       <label
-                        key={p.id}
+                        key={p.id || p.name}
                         className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
                           marked ? 'border-danger-300 bg-danger-50' : 'border-success-200 bg-success-50/60 hover:bg-success-50'
                         }`}

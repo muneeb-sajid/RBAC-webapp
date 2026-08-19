@@ -13,6 +13,7 @@ import UserCreate from '../pages/users/UserCreate.jsx'
 import UserDetails from '../pages/users/UserDetails.jsx'
 import UserPermissions from '../pages/users/UserPermissions.jsx'
 import UserPermissionsLookup from '../pages/users/UserPermissionsLookup.jsx'
+import UserActivity from '../pages/users/UserActivity.jsx'
 
 import Roles from '../pages/roles/Roles.jsx'
 import RoleCreate from '../pages/roles/RoleCreate.jsx'
@@ -22,6 +23,7 @@ import Permissions from '../pages/permissions/Permissions.jsx'
 import AssignPermission from '../pages/permissions/AssignPermission.jsx'
 import RevokePermission from '../pages/permissions/RevokePermission.jsx'
 
+import Security from '../pages/security/Security.jsx'
 import Profile from '../pages/profile/Profile.jsx'
 import SettingsPage from '../pages/settings/Settings.jsx'
 
@@ -87,6 +89,14 @@ export default function AppRoutes() {
               </PermissionGuard>
             }
           />
+          <Route
+            path="/users/:id/activity"
+            element={
+              <PermissionGuard permission="activity.view">
+                <UserActivity />
+              </PermissionGuard>
+            }
+          />
 
           <Route
             path="/roles"
@@ -135,6 +145,15 @@ export default function AppRoutes() {
             element={
               <PermissionGuard permission="permissions.update">
                 <RevokePermission />
+              </PermissionGuard>
+            }
+          />
+
+          <Route
+            path="/security"
+            element={
+              <PermissionGuard permission="security.view">
+                <Security />
               </PermissionGuard>
             }
           />

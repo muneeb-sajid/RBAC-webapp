@@ -26,19 +26,26 @@ const SEED_PERMISSIONS = [
   { name: 'users.update',       displayName: 'Update Users',       module: 'Users',       description: 'Allows editing existing user accounts.',                                    status: 'active' },
   { name: 'users.delete',       displayName: 'Delete Users',       module: 'Users',       description: 'Allows removing user accounts.',                                            status: 'active' },
   { name: 'roles.view',         displayName: 'View Roles',         module: 'Roles',       description: 'Allows viewing roles and their permissions.',                               status: 'active' },
-  { name: 'roles.create',       displayName: 'Create Roles',       module: 'Roles',       description: 'Allows creating new roles.',                                                status: 'active' },
+  { name: 'roles.create',       displayName: 'Create Roles',       module: 'Roles',       description: 'Allows creating new custom roles.',                                         status: 'active' },
   { name: 'roles.update',       displayName: 'Update Roles',       module: 'Roles',       description: 'Allows editing existing roles.',                                            status: 'active' },
-  { name: 'roles.delete',       displayName: 'Delete Roles',       module: 'Roles',       description: 'Allows removing roles.',                                                    status: 'active' },
+  { name: 'roles.delete',       displayName: 'Delete Roles',       module: 'Roles',       description: 'Allows removing custom roles. System roles are always protected.',          status: 'active' },
+  // Permissions are predefined and are never created from the UI — only
+  // viewing and assigning/revoking them on roles is supported.
   { name: 'permissions.view',   displayName: 'View Permissions',   module: 'Permissions', description: 'Allows viewing the permissions catalog.',                                   status: 'active' },
-  { name: 'permissions.create', displayName: 'Create Permissions', module: 'Permissions', description: 'Allows defining new permissions.',                                          status: 'active' },
-  { name: 'permissions.update', displayName: 'Update Permissions', module: 'Permissions', description: 'Allows editing permission metadata, including assigning/revoking on roles.', status: 'active' },
-  { name: 'permissions.delete', displayName: 'Delete Permissions', module: 'Permissions', description: 'Allows removing permissions.',                                              status: 'active' },
+  { name: 'permissions.assign', displayName: 'Assign Permissions', module: 'Permissions', description: 'Allows assigning or revoking predefined permissions on a role.',             status: 'active' },
   { name: 'reports.view',       displayName: 'View Reports',       module: 'Reports',     description: 'Allows viewing analytics and reports.',                                     status: 'active' },
   { name: 'reports.export',     displayName: 'Export Reports',     module: 'Reports',     description: 'Allows exporting reports to CSV/PDF.',                                      status: 'active' },
   { name: 'settings.view',      displayName: 'View Settings',      module: 'Settings',    description: 'Allows viewing system settings.',                                           status: 'active' },
   { name: 'settings.update',    displayName: 'Update Settings',    module: 'Settings',    description: 'Allows changing system settings.',                                          status: 'active' },
   { name: 'billing.view',       displayName: 'View Billing',       module: 'Billing',     description: 'Allows viewing invoices and billing history.',                              status: 'active' },
   { name: 'billing.manage',     displayName: 'Manage Billing',     module: 'Billing',     description: 'Allows updating payment methods and plans.',                                status: 'inactive' },
+  // Security module
+  { name: 'security.view',          displayName: 'View Security Center',  module: 'Security', description: 'Allows accessing the Security section of the admin panel.',          status: 'active' },
+  { name: 'activity.view',          displayName: 'View Activity & Audit', module: 'Security', description: 'Allows viewing login activity, per-user activity, and global audit logs.', status: 'active' },
+  { name: 'sessions.view',          displayName: 'View Sessions',         module: 'Security', description: 'Allows viewing active sessions across the system.',                    status: 'active' },
+  { name: 'sessions.revoke',        displayName: 'Revoke Sessions',       module: 'Security', description: 'Allows revoking an individual session.',                               status: 'active' },
+  { name: 'sessions.force_logout',  displayName: 'Force Logout',          module: 'Security', description: 'Allows forcibly terminating a user\u2019s session(s).',                status: 'active' },
+  { name: 'dashboard.view',         displayName: 'View Dashboard',        module: 'Security', description: 'Allows viewing the admin dashboard overview.',                        status: 'active' },
 ]
 
 const ALL_PERMISSION_NAMES = SEED_PERMISSIONS.map((p) => p.name)
@@ -51,36 +58,47 @@ const SEED_ROLES = [
     description: 'Full access to every module in the system.',
     status: 'active',
     permissions: ALL_PERMISSION_NAMES,
+    isSystemRole: true,
   },
   {
     name: 'Manager',
-    description: 'Manage users and view reports, without destructive access.',
+    description: 'Manage users and view reports, plus visibility into security activity, without destructive access.',
     status: 'active',
-    permissions: ['users.view', 'users.create', 'users.update', 'roles.view', 'reports.view', 'reports.export'],
+    permissions: [
+      'users.view', 'users.create', 'users.update',
+      'roles.view',
+      'reports.view', 'reports.export',
+      'dashboard.view', 'security.view', 'activity.view', 'sessions.view',
+    ],
+    isSystemRole: true,
   },
   {
     name: 'Editor',
     description: 'Can update content-related records but cannot manage access.',
     status: 'active',
-    permissions: ['users.view', 'users.update', 'reports.view'],
+    permissions: ['users.view', 'users.update', 'reports.view', 'dashboard.view'],
+    isSystemRole: false,
   },
   {
     name: 'Viewer',
     description: 'Read-only access across most modules.',
     status: 'active',
-    permissions: ['users.view', 'roles.view', 'permissions.view', 'reports.view'],
+    permissions: ['users.view', 'roles.view', 'permissions.view', 'reports.view', 'dashboard.view'],
+    isSystemRole: false,
   },
   {
     name: 'User',
     description: 'Default role for standard application users.',
     status: 'active',
-    permissions: ['users.view'],
+    permissions: ['users.view', 'dashboard.view'],
+    isSystemRole: false,
   },
   {
     name: 'Billing Admin',
     description: 'Manages invoices and payment settings only.',
     status: 'inactive',
-    permissions: ['billing.view', 'billing.manage'],
+    permissions: ['billing.view', 'billing.manage', 'dashboard.view'],
+    isSystemRole: false,
   },
 ]
 
@@ -143,6 +161,14 @@ async function seed() {
     if (result.upsertedCount) roleInserted++
   }
   console.log(`Roles: ${roleInserted} inserted, ${SEED_ROLES.length - roleInserted} already existed.`)
+
+  // Migration for pre-existing deployments: seeding is upsert-only and
+  // won't touch a role that already exists, so make sure Admin/Manager are
+  // flagged as system roles even if they were created before this field
+  // existed. Custom roles are left untouched.
+  for (const r of SEED_ROLES.filter((r) => r.isSystemRole)) {
+    await Role.updateOne({ name: r.name, isSystemRole: { $ne: true } }, { $set: { isSystemRole: true } })
+  }
 
   // Signable accounts
   let accountInserted = 0

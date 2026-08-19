@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-export const MODULES = ['Users', 'Roles', 'Permissions', 'Reports', 'Settings', 'Billing']
+export const MODULES = ['Users', 'Roles', 'Permissions', 'Reports', 'Settings', 'Billing', 'Security']
 
 const permissionSchema = new mongoose.Schema(
   {

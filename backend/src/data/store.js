@@ -81,8 +81,8 @@ export async function listUsers({ page = 1, pageSize = 10, search = '', status =
   return { items, total, page: Number(page), pageSize: Number(pageSize) }
 }
 
-export async function createUser({ name, email, passwordHash, roles: userRoles = [], status = 'active', avatarColor = '#4F46E5' }) {
-  const doc = await User.create({ name, email, passwordHash: passwordHash || null, roles: userRoles, status, avatarColor })
+export async function createUser({ name, email, passwordHash, roles: userRoles = [], status = 'active', avatarColor = '#4F46E5', createdBy = null }) {
+  const doc = await User.create({ name, email, passwordHash: passwordHash || null, roles: userRoles, status, avatarColor, createdBy })
   return sanitizeUser(doc)
 }
 
@@ -199,8 +199,8 @@ export async function getRoleWithUsers(id) {
   }
 }
 
-export async function createRole({ name, description, status = 'active', permissions: rolePermissions = [] }) {
-  const doc = await Role.create({ name, description, status, permissions: rolePermissions })
+export async function createRole({ name, description, status = 'active', permissions: rolePermissions = [], isSystemRole = false, createdBy = null }) {
+  const doc = await Role.create({ name, description, status, permissions: rolePermissions, isSystemRole, createdBy })
   const obj = doc.toObject()
   obj.id = obj._id.toString()
   delete obj._id
@@ -208,9 +208,20 @@ export async function createRole({ name, description, status = 'active', permiss
   return obj
 }
 
+// System roles (isSystemRole: true) may have their permission set edited,
+// but their name is protected from being changed — renaming would break
+// the string-based role/permission contract used throughout the app.
 export async function updateRole(id, patch) {
   if (!isValidId(id)) return null
-  const doc = await Role.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true })
+  const existing = await Role.findById(id).lean()
+  if (!existing) return null
+  const safePatch = { ...patch }
+  if (existing.isSystemRole && safePatch.name && safePatch.name !== existing.name) {
+    throw new ApiError(400, 'System roles cannot be renamed.')
+  }
+  // isSystemRole itself is never editable via the generic update path.
+  delete safePatch.isSystemRole
+  const doc = await Role.findByIdAndUpdate(id, { $set: safePatch }, { new: true, runValidators: true })
   if (!doc) return null
   const obj = doc.toObject()
   obj.id = obj._id.toString()
@@ -221,6 +232,11 @@ export async function updateRole(id, patch) {
 
 export async function deleteRole(id) {
   if (!isValidId(id)) return false
+  const existing = await Role.findById(id).lean()
+  if (!existing) return false
+  if (existing.isSystemRole) {
+    throw new ApiError(400, 'System roles are protected and cannot be deleted.')
+  }
   const result = await Role.findByIdAndDelete(id)
   return result !== null
 }

@@ -21,21 +21,19 @@ import { timeAgo } from '../../utils/format'
 export default function Dashboard() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 500)
     return () => clearTimeout(t)
-  }, [])
-
+  }, []);
   const maxRole = Math.max(...usersByRole.map((r) => r.count), 1)
   const maxModule = Math.max(...permissionsByModule.map((m) => m.count), 1)
   const maxTrend = Math.max(...weeklyActiveTrend.map((d) => d.value), 1)
   const recentUsers = [...users].slice(0, 5)
-
-  if (loading) {
+    if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <LoadingSpinner size={26} label="Loading dashboard…" />
+      
       </div>
     )
   }

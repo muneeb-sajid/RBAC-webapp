@@ -45,6 +45,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '#4F46E5',
     },
+    // Who created this account. Null for self-registered users and the
+    // very first seeded accounts.
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
   },
   { timestamps: true }
 )

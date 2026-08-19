@@ -11,6 +11,7 @@ import {
   Settings,
   ChevronsLeft,
   ShieldHalf,
+  ShieldAlert,
   X,
 } from 'lucide-react'
 import clsx from 'clsx'
@@ -36,6 +37,10 @@ const NAV_SECTIONS = [
       { label: 'Revoke permissions', to: '/permissions/revoke', icon: UserMinus, permission: 'permissions.update' },
       { label: 'User permissions', to: '/users/lookup/permissions', icon: UserCog, permission: 'users.view' },
     ],
+  },
+  {
+    label: 'Security',
+    items: [{ label: 'Security center', to: '/security', icon: ShieldAlert, permission: 'security.view' }],
   },
   {
     label: 'Account',

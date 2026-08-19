@@ -7,6 +7,7 @@ import SearchBar from '../../components/common/SearchBar.jsx'
 import Button from '../../components/common/Button.jsx'
 import DataTable from '../../components/tables/DataTable.jsx'
 import StatusBadge from '../../components/common/StatusBadge.jsx'
+import Badge from '../../components/common/Badge.jsx'
 import Dropdown from '../../components/common/Dropdown.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import ErrorState from '../../components/common/ErrorState.jsx'
@@ -72,6 +73,7 @@ export default function Roles() {
             <ShieldCheck size={15} />
           </div>
           <span className="font-medium text-ink-900">{r.name}</span>
+          {r.isSystemRole && <Badge tone="neutral">System</Badge>}
         </div>
       ),
     },
@@ -97,7 +99,13 @@ export default function Roles() {
               { label: 'View permissions', icon: Eye, onClick: () => navigate(`/roles/${r.id}`) },
               { label: 'Edit role', icon: Pencil, onClick: () => navigate(`/roles/${r.id}`) },
               { divider: true },
-              { label: 'Delete role', icon: Trash2, danger: true, onClick: () => setDeleteTarget(r) },
+              {
+                label: r.isSystemRole ? 'System role (protected)' : 'Delete role',
+                icon: Trash2,
+                danger: !r.isSystemRole,
+                disabled: r.isSystemRole,
+                onClick: () => setDeleteTarget(r),
+              },
             ]}
           />
         </div>

@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import roleRoutes from './routes/roleRoutes.js'
 import permissionRoutes from './routes/permissionRoutes.js'
+import securityRoutes from './routes/securityRoutes.js'
 import { notFoundHandler } from './middleware/notFound.js'
 import { errorHandler } from './middleware/errorHandler.js'
 
@@ -44,6 +45,7 @@ export function createApp() {
   app.use('/api/users', userRoutes)
   app.use('/api/roles', roleRoutes)
   app.use('/api/permissions', permissionRoutes)
+  app.use('/api/admin', securityRoutes)
 
   app.use(notFoundHandler)
   app.use(errorHandler)

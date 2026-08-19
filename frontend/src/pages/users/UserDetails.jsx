@@ -11,21 +11,27 @@ import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import LoadingSpinner from '../../components/common/LoadingSpinner.jsx'
 import ErrorState from '../../components/common/ErrorState.jsx'
 import { Can } from '../../routes/PermissionGuard.jsx'
+import usePermission from '../../hooks/usePermission'
 import { useToast } from '../../context/ToastContext.jsx'
 import { getUserById, deleteUser } from '../../services/user'
-import { recentActivity } from '../../data/mockData'
-import { formatDate, formatDateTime } from '../../utils/format'
+import { getUserRecentActivity } from '../../services/security'
+import ActionBadge from '../../components/common/ActionBadge.jsx'
+import { formatDate, formatDateTime, timeAgo } from '../../utils/format'
 
 export default function UserDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
+  const { can } = usePermission()
 
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  const [activity, setActivity] = useState([])
+  const [activityLoading, setActivityLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
@@ -34,6 +40,20 @@ export default function UserDetails() {
       .catch(setError)
       .finally(() => setLoading(false))
   }, [id])
+
+  // Per-user activity is admin-only: only fetched (and only rendered) when
+  // the signed-in user actually holds activity.view. The backend enforces
+  // this independently — this just avoids an unnecessary 403 round trip.
+  useEffect(() => {
+    if (!can('activity.view')) {
+      setActivityLoading(false)
+      return
+    }
+    setActivityLoading(true)
+    getUserRecentActivity(id, 6)
+      .then(setActivity)
+      .finally(() => setActivityLoading(false))
+  }, [id, can])
 
   async function handleDelete() {
     setDeleting(true)
@@ -148,24 +168,45 @@ export default function UserDetails() {
             </p>
           </Card>
 
-          {/* Activity */}
-          <Card>
-            <CardHeader title="Recent activity" description="Latest actions involving this account" />
-            <div className="flex flex-col gap-4">
-              {recentActivity.slice(0, 4).map((a) => (
-                <div key={a.id} className="flex gap-3">
-                  <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
-                  <div>
-                    <p className="text-sm text-slate-600">
-                      <span className="font-semibold text-ink-900">{a.actor}</span> {a.action}{' '}
-                      <span className="font-medium text-ink-900">{a.target}</span>
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-400">{a.time}</p>
-                  </div>
+          {/* Activity — admin-only (activity.view) */}
+          <Can permission="activity.view">
+            <Card>
+              <CardHeader
+                title="Recent activity"
+                description="Latest actions performed by or on this account"
+                action={
+                  <Button variant="ghost" size="sm" onClick={() => navigate(`/users/${id}/activity`)}>
+                    View all activity
+                  </Button>
+                }
+              />
+
+              {activityLoading ? (
+                <div className="flex justify-center py-6">
+                  <LoadingSpinner size={20} label="Loading activity…" />
                 </div>
-              ))}
-            </div>
-          </Card>
+              ) : activity.length === 0 ? (
+                <p className="py-4 text-center text-sm text-slate-400">No recorded activity for this account yet.</p>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {activity.map((a) => (
+                    <div key={a.id} className="flex items-start justify-between gap-3">
+                      <div className="flex gap-3">
+                        <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
+                        <div>
+                          <p className="text-sm text-slate-600">{a.description}</p>
+                          <p className="mt-0.5 text-xs text-slate-400">
+                            {a.module} · {timeAgo(a.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <ActionBadge action={a.action} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </Can>
         </div>
       </div>
 

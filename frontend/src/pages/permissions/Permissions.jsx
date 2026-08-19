@@ -12,7 +12,6 @@ import Badge from '../../components/common/Badge.jsx'
 import ErrorState from '../../components/common/ErrorState.jsx'
 import { Can } from '../../routes/PermissionGuard.jsx'
 import { getPermissions } from '../../services/permission'
-import { MODULES } from '../../data/mockData'
 import { formatDate } from '../../utils/format'
 import useDebounce from '../../hooks/useDebounce'
 
@@ -24,6 +23,9 @@ const TYPE_OPTIONS = [
   { value: 'delete', label: 'Delete' },
   { value: 'manage', label: 'Manage' },
   { value: 'export', label: 'Export' },
+  { value: 'assign', label: 'Assign' },
+  { value: 'revoke', label: 'Revoke' },
+  { value: 'force_logout', label: 'Force logout' },
 ]
 
 export default function Permissions() {
@@ -32,6 +34,7 @@ export default function Permissions() {
   const [module, setModule] = useState('all')
   const [type, setType] = useState('all')
   const [data, setData] = useState({ items: [], total: 0 })
+  const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -49,6 +52,16 @@ export default function Permissions() {
       setLoading(false)
     }
   }, [debouncedSearch, module, type])
+
+  // Module list is derived from whatever the backend actually returns
+  // (the predefined permission catalog), so a new module never has to be
+  // hand-added here to appear in the filter.
+  useEffect(() => {
+    getPermissions().then((res) => {
+      const unique = Array.from(new Set(res.items.map((p) => p.module))).sort()
+      setModules(unique)
+    })
+  }, [])
 
   useEffect(() => {
     load()
@@ -114,7 +127,7 @@ export default function Permissions() {
             value={module}
             onChange={(e) => setModule(e.target.value)}
             className="sm:w-40"
-            options={[{ value: 'all', label: 'All modules' }, ...MODULES.map((m) => ({ value: m, label: m }))]}
+            options={[{ value: 'all', label: 'All modules' }, ...modules.map((m) => ({ value: m, label: m }))]}
           />
           <Select value={type} onChange={(e) => setType(e.target.value)} className="sm:w-40" options={TYPE_OPTIONS} />
         </div>
