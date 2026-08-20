@@ -14,6 +14,8 @@ import {
 import { getRequestContext } from '../utils/requestContext.js'
 import { logActivity, ACTIONS, MODULES } from '../services/activityService.js'
 import { revokeAllSessionsForUser } from '../services/sessionService.js'
+import { sendEmail } from '../services/emailService.js'
+
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SALT_ROUNDS = 10
@@ -62,7 +64,19 @@ export const postUser = asyncHandler(async (req, res) => {
     targetType: 'User',
     ...ctx,
   })
+   await sendEmail({
+    to: created.email,
+    subject:"Welcome To Sentinal",
+    html:`
+    <h1>Welcome ${created.name}</h1>
+    <p> Your Account has been created Successfully</p>
+    <p> Your Initial Crediantials to login </p>
+    <p> Email: <b> ${created.email} </b></p>
+    <p> Password:<b> ${password}</b></p>
 
+    <p>After login please change your password!</p>
+    `
+   })
   res.status(201).json(created)
 })
 
